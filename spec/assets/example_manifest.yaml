@@ -1,0 +1,160 @@
+compilation:
+  cloud_properties:
+    instance_type: m1.medium
+  network: infrastructure
+  reuse_compilation_vms: true
+  workers: 2
+director_uuid: f28109b2-1dac-4899-8113-82e3dd26b57f
+jobs:
+- instances: 3
+  name: cassandra_node
+  networks:
+  - name: infrastructure
+    static_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+  persistent_disk: 1024
+  release: cassandra
+  resource_pool: services-small
+  templates:
+  - name: cassandra_node
+    release: cassandra
+  - name: ntpd
+    release: cassandra
+- instances: 0
+  name: cassandra_node_with_no_instances
+  networks:
+  - name: infrastructure
+    static_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+  persistent_disk: 1024
+  release: cassandra
+  resource_pool: services-small
+  templates:
+  - name: cassandra_node
+    release: cassandra
+  - name: ntpd
+    release: cassandra
+- instances: 1
+  name: cf-cassandra-broker
+  networks:
+  - name: infrastructure
+    static_ips:
+    - 10.10.34.5
+  persistent_disk: 1024
+  release: cassandra
+  resource_pool: services-small
+  templates:
+  - name: cf-cassandra-broker
+    release: cassandra
+  - name: ntpd
+    release: cassandra
+- instances: 1
+  lifecycle: errand
+  name: broker-registrar
+  networks:
+  - name: infrastructure
+  properties:
+    broker:
+      host: 10.10.34.5
+      name: cassandra
+      password: admin
+      username: admin
+  release: cassandra
+  resource_pool: services-small
+  templates:
+  - name: broker-registrar
+    release: cassandra
+- instances: 1
+  lifecycle: errand
+  name: broker-deregistrar
+  networks:
+  - name: infrastructure
+  properties:
+    broker:
+      host: 10.10.34.5
+      name: cassandra
+      password: admin
+      username: admin
+  release: cassandra
+  resource_pool: services-small
+  templates:
+  - name: broker-deregistrar
+    release: cassandra
+meta:
+  stemcell:
+    name: bosh-aws-xen-ubuntu-lucid-go_agent
+    version: latest
+name: cassandra
+networks:
+- name: infrastructure
+  subnets:
+  - cloud_properties:
+      subnet: subnet-e40176cc
+    dns:
+    - 10.10.0.6
+    gateway: 10.10.34.1
+    range: 10.10.34.0/24
+    reserved:
+    - 10.10.34.2 - 10.10.34.4
+    - 10.10.34.100 - 10.10.34.254
+    static:
+    - 10.10.34.5 - 10.10.34.20
+  type: manual
+- cloud_properties:
+    security_groups:
+    - bosh
+  name: vip_network
+  subnets:
+  - dns:
+    - 127.0.99.250
+    gateway: 127.0.99.1
+    range: 127.0.99.0/24
+  type: vip
+properties:
+  cassandra:
+    admin_password: comtruise
+    broker:
+      http_auth:
+        password: admin
+        username: admin
+    cluster_nodes_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+    cluster_seeds_num: 3
+    jmx_password: bluntlily
+    network: infrastructure
+  cf:
+    admin_password: pupelo468-coemptor
+    admin_username: admin
+    api_url: https://ccng.cfintegration.cf-app.com
+  ntpd:
+    external_server: 0.uk.pool.ntp.org
+    other_node_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+    preferred_node_ip:
+    - 10.10.34.5
+releases:
+- name: cassandra
+  version: latest
+resource_pools:
+- cloud_properties:
+    instance_type: m1.small
+  name: services-small
+  network: infrastructure
+  size: 6
+  stemcell:
+    name: bosh-aws-xen-ubuntu
+    version: latest
+update:
+  canaries: 1
+  canary_watch_time: 30000-330000
+  max_in_flight: 1
+  serial: false
+  update_watch_time: 30000-330000

@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+# expect "fake_ssh -D <host>:<port> -N <username>@<host>"
+
+puts ARGV.inspect
+host_and_port = ARGV.fetch(1) { fail 'Could not find host and port in arguments' }
+host, port = host_and_port.split(':')
+user_host = ARGV.fetch(3) { fail 'Could not find user in arguments' }
+
+puts "Password:"
+password = STDIN.gets
+
+if user_host =~ /^\w+\@\w+$/ && password.chomp == 'SECRET'
+  require 'socket'
+  server = TCPServer.new port
+  loop do
+    client = server.accept
+    client.print "SSH-2.0-FakeSSH_6.2\n"
+    client.close
+  end
+
+  exit 0
+else
+  exit 1
+end
