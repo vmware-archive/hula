@@ -150,10 +150,14 @@ module Hula
     end
 
     def assert_broker_is_in_marketplace(type)
-      output = cf('marketplace')
+      output = marketplace
       unless output.include?(type)
         fail "Broker #{type} not found in marketplace"
       end
+    end
+
+    def marketplace
+      cf('marketplace')
     end
 
     def create_service_instance(type, name, plan)

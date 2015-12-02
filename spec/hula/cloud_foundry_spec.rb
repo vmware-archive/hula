@@ -124,6 +124,37 @@ describe Hula::CloudFoundry do
     end
   end
 
+  describe '#marketplace' do
+    let(:options) do
+      {
+        domain: '10.244.0.34.xip.io',
+        api_url: 'api.10.244.0.34.xip.io',
+        username: 'admin',
+        password: 'admin',
+        logger: Logger.new('/dev/null'),
+        command_runner: command_runner,
+        target_and_login: false
+      }
+    end
+
+    let(:command_runner) { instance_double(Hula::CommandRunner, run: nil) }
+
+    before do
+      allow(command_runner).to receive(:run).with('cf marketplace', anything).and_return(
+        <<-OUTPUT.strip_heredoc
+        Getting services from marketplace in org ije3ftux_1 / space test as admin...
+        OK
+
+        No service offerings found
+        OUTPUT
+      )
+    end
+
+    it 'executes the expected cf command' do
+      expect(cloud_foundry.marketplace).to include('Getting services from marketplace in org ije3ftux_1')
+    end
+  end
+
   describe '#service_brokers' do
     let(:command_runner) { instance_double(Hula::CommandRunner, run: nil) }
 
