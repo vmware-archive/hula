@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version  = '>= 2.1.0'
 
-  spec.files         = Dir.glob('lib/**/*') + ['LICENSE']
+  spec.files         = Dir.glob('lib/**/*') + ['LEGAL']
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '~> 1.7'

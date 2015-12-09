@@ -1,10 +1,10 @@
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec)
 
-desc 'bump and release patch version, create and push gem to Gemfury'
+desc 'bump and release patch version, create and push gem to rubygems'
 task release: [:rebase, :spec, :bump_patch, :build, :publish]
 
-desc 'bump and release minor version, create and push gem to Gemfury'
+desc 'bump and release minor version, create and push gem to rubygems'
 task release_minor: [:rebase, :spec, :bump_minor, :build, :publish]
 
 task :rebase do
@@ -15,7 +15,7 @@ desc 'publish gem'
 task :publish do
   new_gem = Dir['*.gem'].sort_by { |file| File.stat(file).ctime }.last
   fail 'Could not find newly created gem!' unless new_gem
-  sh "fury push #{new_gem}"
+  sh "gem push #{new_gem}"
 end
 
 desc 'build gem'
