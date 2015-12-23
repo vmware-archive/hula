@@ -1,0 +1,21 @@
+---
+resources:
+  - name: hula
+    type: git
+    source:
+      uri: https://github.com/pivotal-cf-experimental/hula
+      branch: master
+
+jobs:
+  - name: tests
+    plan:
+      - get: hula
+        trigger: true
+      - task: run-tests
+        config:
+          platform: linux
+          image: docker:///cflondonservices/london-services-ci-base#stable
+          inputs:
+            - name: hula
+          run:
+            path: hula/ci/tests.sh
