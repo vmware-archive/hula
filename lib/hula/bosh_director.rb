@@ -130,6 +130,15 @@ module Hula
     # +------------------------------------+---------+---------------+--------------+
     # | api_z1/0                           | running | large_z1      | 10.244.0.138 |
     # ...
+    #
+    # Also matches output from 1.3184 bosh_cli e.g.
+    #
+    # +------------------------------------------------+---------+----------------+--------------+
+    # | VM                                             | State   | AZ  | VM Type  | IPs          |
+    # +------------------------------------------------+---------+----------------+--------------+
+    # | api_z1/0 (fe04916e-afd0-42a3-aaf5-52a8b163f1ab)| running | n/a | large_z1 | 10.244.0.138 |
+    # ...
+    #
     def ips_for_job(job, deployment_name = nil)
       output = run_bosh("vms #{deployment_name}")
       deployments = output.split(/^Deployment/)
@@ -139,8 +148,8 @@ module Hula
       deployments.each do |deployment|
         rows = deployment.split("\n")
         row_cols = rows.map { |row| row.split('|') }
-        job_cols = row_cols.  select { |cols| cols.length == 5 } # match job boxes
-        job_ip_pairs = job_cols.map { |cols| [cols[1].strip, cols.last.strip] }
+        job_cols = row_cols.  select { |cols| cols.length == 5 || cols.length == 6 } # match job boxes
+        job_ip_pairs = job_cols.map { |cols| [cols[1].strip.split(' ')[0], cols.last.strip] }
         jobs_with_real_ips = job_ip_pairs.select { |pairs| pairs.last =~ /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/ }
         # converts eg   cf-redis-broker/2  to cf-redis-broker
         jobs_without_instance_numbers = jobs_with_real_ips.map { |pair| [pair.first.gsub(/\/.*/, ''), pair.last] }

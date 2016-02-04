@@ -269,88 +269,177 @@ module Hula
     end
 
     describe '#ips_for_job' do
-      let(:bosh_vms_output) do
-        %{
-  Deployment `cf-redis'
-
-  Director task 654
-
-  Task 654 done
-
-  +-------------------+---------+----------------+-------------+
-  | Job/index         | State   | Resource Pool  | IPs         |
-  +-------------------+---------+----------------+-------------+
-  | unknown/unknown   | running | services-small | 10.244.3.34 |
-  | unknown/unknown   | running | services-small | 10.244.3.38 |
-  | cf-redis-broker/0 | running | services-small | 10.244.3.46 |
-  +-------------------+---------+----------------+-------------+
-
-  VMs total: 3
-  Deployment `cf-warden'
-
-  Director task 655
-
-  Task 655 done
-
-  +------------------------------------+---------+---------------+--------------+
-  | Job/index                          | State   | Resource Pool | IPs          |
-  +------------------------------------+---------+---------------+--------------+
-  | api_z1/0                           | running | large_z1      | 10.244.0.138 |
-  | etcd_leader_z1/0                   | running | medium_z1     | 10.244.0.38  |
-  | ha_proxy_z1/0                      | running | router_z1     | 10.244.0.34  |
-  | hm9000_z1/0                        | running | medium_z1     | 10.244.0.142 |
-  | loggregator_trafficcontroller_z1/0 | running | small_z1      | 10.244.0.10  |
-  | loggregator_z1/0                   | running | medium_z1     | 10.244.0.14  |
-  | login_z1/0                         | running | medium_z1     | 10.244.0.134 |
-  | nats_z1/0                          | running | medium_z1     | 10.244.0.6   |
-  | postgres_z1/0                      | running | medium_z1     | 10.244.0.30  |
-  | router_z1/0                        | running | router_z1     | 10.244.0.22  |
-  | router_z1/1                        | running | router_z1     | 10.244.0.26  |
-  | uaa_z1/0                           | running | medium_z1     | 10.244.0.130 |
-  +------------------------------------+---------+---------------+--------------+
-
-  VMs total: 12
-        }
-      end
-
-      before do
-        allow(command_runner).to receive(:run).with("#{bosh_command_prefix} vms ").and_return(bosh_vms_output)
-      end
-
-      it 'returns a list of ips for that job' do
-        expect(bosh_director.ips_for_job('cf-redis-broker')).to eq(['10.244.3.46'])
-        expect(bosh_director.ips_for_job('router_z1')).to eq(['10.244.0.22', '10.244.0.26'])
-        expect(bosh_director.ips_for_job('non_existant_job')).to eq([])
-      end
-
-      context 'when release name is provided' do
+      context 'when BOSH CLI is less than 1.3184' do
         let(:bosh_vms_output) do
-        %{
-  Deployment `cf-redis'
+          %{
+    Deployment `cf-redis'
 
-  Director task 654
+    Director task 654
 
-  Task 654 done
+    Task 654 done
 
-  +-------------------+---------+----------------+-------------+
-  | Job/index         | State   | Resource Pool  | IPs         |
-  +-------------------+---------+----------------+-------------+
-  | unknown/unknown   | running | services-small | 10.244.3.34 |
-  | unknown/unknown   | running | services-small | 10.244.3.38 |
-  | cf-redis-broker/0 | running | services-small | 10.244.3.46 |
-  +-------------------+---------+----------------+-------------+
+    +-------------------+---------+----------------+-------------+
+    | Job/index         | State   | Resource Pool  | IPs         |
+    +-------------------+---------+----------------+-------------+
+    | unknown/unknown   | running | services-small | 10.244.3.34 |
+    | unknown/unknown   | running | services-small | 10.244.3.38 |
+    | cf-redis-broker/0 | running | services-small | 10.244.3.46 |
+    +-------------------+---------+----------------+-------------+
 
-  VMs total: 3
-        }
+    VMs total: 3
+    Deployment `cf-warden'
+
+    Director task 655
+
+    Task 655 done
+
+    +------------------------------------+---------+---------------+--------------+
+    | Job/index                          | State   | Resource Pool | IPs          |
+    +------------------------------------+---------+---------------+--------------+
+    | api_z1/0                           | running | large_z1      | 10.244.0.138 |
+    | etcd_leader_z1/0                   | running | medium_z1     | 10.244.0.38  |
+    | ha_proxy_z1/0                      | running | router_z1     | 10.244.0.34  |
+    | hm9000_z1/0                        | running | medium_z1     | 10.244.0.142 |
+    | loggregator_trafficcontroller_z1/0 | running | small_z1      | 10.244.0.10  |
+    | loggregator_z1/0                   | running | medium_z1     | 10.244.0.14  |
+    | login_z1/0                         | running | medium_z1     | 10.244.0.134 |
+    | nats_z1/0                          | running | medium_z1     | 10.244.0.6   |
+    | postgres_z1/0                      | running | medium_z1     | 10.244.0.30  |
+    | router_z1/0                        | running | router_z1     | 10.244.0.22  |
+    | router_z1/1                        | running | router_z1     | 10.244.0.26  |
+    | uaa_z1/0                           | running | medium_z1     | 10.244.0.130 |
+    +------------------------------------+---------+---------------+--------------+
+
+    VMs total: 12
+          }
         end
 
-        it 'only searches inside the given release' do
-          expect(command_runner).to receive(:run).with("#{bosh_command_prefix} vms cf-redis").twice.and_return(bosh_vms_output)
+        before do
+          allow(command_runner).to receive(:run).with("#{bosh_command_prefix} vms ").and_return(bosh_vms_output)
+        end
 
-          expect(bosh_director.ips_for_job('cf-redis-broker', 'cf-redis')).to eq(['10.244.3.46'])
-          expect(bosh_director.ips_for_job('router_z1', 'cf-redis')).to eq([])
+        it 'returns a list of ips for that job' do
+          expect(bosh_director.ips_for_job('cf-redis-broker')).to eq(['10.244.3.46'])
+          expect(bosh_director.ips_for_job('router_z1')).to eq(['10.244.0.22', '10.244.0.26'])
+          expect(bosh_director.ips_for_job('non_existant_job')).to eq([])
+        end
+
+        context 'when release name is provided' do
+          let(:bosh_vms_output) do
+          %{
+    Deployment `cf-redis'
+
+    Director task 654
+
+    Task 654 done
+
+    +-------------------+---------+----------------+-------------+
+    | Job/index         | State   | Resource Pool  | IPs         |
+    +-------------------+---------+----------------+-------------+
+    | unknown/unknown   | running | services-small | 10.244.3.34 |
+    | unknown/unknown   | running | services-small | 10.244.3.38 |
+    | cf-redis-broker/0 | running | services-small | 10.244.3.46 |
+    +-------------------+---------+----------------+-------------+
+
+    VMs total: 3
+          }
+          end
+
+          it 'only searches inside the given release' do
+            expect(command_runner).to receive(:run).with("#{bosh_command_prefix} vms cf-redis").twice.and_return(bosh_vms_output)
+
+            expect(bosh_director.ips_for_job('cf-redis-broker', 'cf-redis')).to eq(['10.244.3.46'])
+            expect(bosh_director.ips_for_job('router_z1', 'cf-redis')).to eq([])
+          end
         end
       end
+
+      context 'when BOSH CLI is equal or greater than 1.3184' do
+        let(:bosh_vms_output) do
+          %{
+    Deployment 'cf-redis'
+
+    Director task 654
+
+    Task 654 done
+
+    +---------------------------------------------------------+---------+-----+----------------+-------------+
+    | VM                                                      | State   | AZ  | VM Type        | IPs         |
+    +---------------------------------------------------------+---------+-----+----------------+-------------+
+    | unknown/unknown (fe04916e-afd0-42a3-aaf5-52a8b163f1ab)  | running | n/a | services-small | 10.244.3.34 |
+    | unknown/unknown (fe04916e-afd0-42a3-aaf5-52a8b163f1ab)  | running | n/a | services-small | 10.244.3.38 |
+    | cf-redis-broker/0 (fe04916e-afd0-42a3-aaf5-52a8b163f1ab)| running | n/a | services-small | 10.244.3.46 |
+    +---------------------------------------------------------+---------+-----+----------------+-------------+
+
+    VMs total: 3
+    Deployment 'cf-warden'
+
+    Director task 655
+
+    Task 655 done
+
+    +---------------------------------------------------------------------------+---------+-----+---------------+--------------+
+    | VM                                                                        | State   | AZ  | VM Type       | IPs          |
+    +---------------------------------------------------------------------------+---------+-----+---------------+--------------+
+    | api_z1/0                           (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | large_z1      | 10.244.0.138 |
+    | etcd_leader_z1/0                   (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.38  |
+    | ha_proxy_z1/0                      (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | router_z1     | 10.244.0.34  |
+    | hm9000_z1/0                        (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.142 |
+    | loggregator_trafficcontroller_z1/0 (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | small_z1      | 10.244.0.10  |
+    | loggregator_z1/0                   (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.14  |
+    | login_z1/0                         (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.134 |
+    | nats_z1/0                          (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.6   |
+    | postgres_z1/0                      (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.30  |
+    | router_z1/0                        (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | router_z1     | 10.244.0.22  |
+    | router_z1/1                        (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | router_z1     | 10.244.0.26  |
+    | uaa_z1/0                           (fe04916e-afd0-42a3-aaf5-52a8b163f1ab) | running | n/a | medium_z1     | 10.244.0.130 |
+    +---------------------------------------------------------------------------+---------+-----+---------------+--------------+
+
+    VMs total: 12
+          }
+        end
+
+        before do
+          allow(command_runner).to receive(:run).with("#{bosh_command_prefix} vms ").and_return(bosh_vms_output)
+        end
+
+        it 'returns a list of ips for that job' do
+          expect(bosh_director.ips_for_job('cf-redis-broker')).to eq(['10.244.3.46'])
+          expect(bosh_director.ips_for_job('router_z1')).to eq(['10.244.0.22', '10.244.0.26'])
+          expect(bosh_director.ips_for_job('non_existant_job')).to eq([])
+        end
+
+
+        context 'when release name is provided' do
+          let(:bosh_vms_output) do
+          %{
+    Deployment `cf-redis'
+
+    Director task 654
+
+    Task 654 done
+
+    +-------------------+---------+-----+----------------+-------------+
+    | VM                | State   | AZ  | VM Type        | IPs         |
+    +-------------------+---------+-----+----------------+-------------+
+    | unknown/unknown   | running | n/a | services-small | 10.244.3.34 |
+    | unknown/unknown   | running | n/a | services-small | 10.244.3.38 |
+    | cf-redis-broker/0 | running | n/a | services-small | 10.244.3.46 |
+    +-------------------+---------+-----+----------------+-------------+
+
+    VMs total: 3
+          }
+          end
+
+          it 'only searches inside the given release' do
+            expect(command_runner).to receive(:run).with("#{bosh_command_prefix} vms cf-redis").twice.and_return(bosh_vms_output)
+
+            expect(bosh_director.ips_for_job('cf-redis-broker', 'cf-redis')).to eq(['10.244.3.46'])
+            expect(bosh_director.ips_for_job('router_z1', 'cf-redis')).to eq([])
+          end
+        end
+      end
+
     end
 
     describe '#recreate_instance' do
