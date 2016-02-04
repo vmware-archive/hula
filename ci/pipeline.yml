@@ -6,10 +6,20 @@ resources:
       uri: https://github.com/pivotal-cf-experimental/hula
       branch: master
 
+  - name: time-24hours
+    type: time
+    source:
+      interval: 24h
+
 jobs:
   - name: tests
     plan:
-    - get: hula
-      trigger: true
-    - task: run-tests
-      file: hula/ci/run-tests.yml
+    - do:
+      - aggregate:
+        - get: hula
+          trigger: true
+        - get: time-24hours
+          trigger: true
+      - task: run-tests
+        file: hula/ci/run-tests.yml
+
