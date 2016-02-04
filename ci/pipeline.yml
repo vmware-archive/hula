@@ -9,13 +9,7 @@ resources:
 jobs:
   - name: tests
     plan:
-      - get: hula
-        trigger: true
-      - task: run-tests
-        config:
-          platform: linux
-          image: docker:///cflondonservices/london-services-ci-base#stable
-          inputs:
-            - name: hula
-          run:
-            path: hula/ci/tests.sh
+    - get: hula
+      trigger: true
+    - task: run-tests
+      file: hula/ci/run-tests.yml
