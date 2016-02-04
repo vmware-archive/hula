@@ -1,0 +1,10 @@
+---
+platform: linux
+
+image: docker:///cflondonservices/london-services-ci-base#stable
+
+inputs:
+- name: hula
+
+run:
+  path: hula/ci/tests.sh
