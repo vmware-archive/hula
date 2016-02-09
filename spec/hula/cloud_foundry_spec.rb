@@ -245,4 +245,35 @@ describe Hula::CloudFoundry do
       expect(cloud_foundry.app_vcap_services('test-app')).to eq({"username"=>"admin", "password"=>"passwd"})
     end
   end
+
+  describe '#auth_token' do
+    let(:command_runner) { instance_double(Hula::CommandRunner, run: nil) }
+
+    let(:options) do
+      {
+        domain: '10.244.0.34.xip.io',
+        api_url: 'api.10.244.0.34.xip.io',
+        username: 'admin',
+        password: 'admin',
+        logger: Logger.new('/dev/null'),
+        command_runner: command_runner,
+        target_and_login: false
+      }
+    end
+
+    before do
+      allow(command_runner).to receive(:run).with('cf oauth-token', anything).and_return(
+           <<-OUTPUT.strip_heredoc
+          Getting OAuth token...
+          OK
+
+          bearer dummy-token
+          OUTPUT
+        )
+    end
+
+    it 'returns the token' do
+      expect(cloud_foundry.auth_token).to eq("bearer dummy-token")
+    end
+  end
 end

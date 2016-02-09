@@ -33,6 +33,10 @@ module Hula
       end
     end
 
+    def auth_token
+      cf("oauth-token").lines.last.strip!
+    end
+
     def url_for_app(app_name)
       "https://#{app_name}.#{domain}"
     end
