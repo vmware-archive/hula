@@ -118,6 +118,50 @@ describe Hula::CloudFoundry do
     end
   end
 
+  describe 'info' do
+    let(:command_runner) { instance_double(Hula::CommandRunner, run: nil) }
+    let(:options) do
+      {
+        domain: '10.244.0.34.xip.io',
+        api_url: 'api.10.244.0.34.xip.io',
+        username: 'admin',
+        password: 'admin',
+        logger: Logger.new('/dev/null'),
+        command_runner: command_runner,
+        target_and_login: false
+      }
+    end
+
+    before do
+      allow(command_runner).to receive(:run).with('cf curl /v2/info', anything).and_return(
+        <<-OUTPUT.strip_heredoc
+        {
+           "name": "",
+           "build": "",
+           "support": "http://support.cloudfoundry.com",
+           "version": 0,
+           "description": "",
+           "authorization_endpoint": "https://login.bosh-lite.com",
+           "token_endpoint": "https://uaa.bosh-lite.com",
+           "min_cli_version": null,
+           "min_recommended_cli_version": null,
+           "api_version": "2.51.0",
+           "app_ssh_endpoint": "ssh.bosh-lite.com:2222",
+           "app_ssh_host_key_fingerprint": "a6:d1:08:0b:b0:cb:9b:5f:c4:ba:44:2a:97:26:19:8a",
+           "app_ssh_oauth_client": "ssh-proxy",
+           "routing_endpoint": "https://api.bosh-lite.com/routing",
+           "logging_endpoint": "wss://loggregator.bosh-lite.com:443",
+           "doppler_logging_endpoint": "wss://doppler.bosh-lite.com:4443"
+        }
+        OUTPUT
+      )
+    end
+
+    it 'returns CloudFoundry info' do
+      expect(cloud_foundry.info).to include("doppler_logging_endpoint" => "wss://doppler.bosh-lite.com:4443")
+    end
+  end
+
   describe '#version' do
     it 'uses v6.X of the cf binary' do
       expect(cloud_foundry.version).to match(/\b6\./)

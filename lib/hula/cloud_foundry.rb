@@ -266,6 +266,11 @@ module Hula
       cf('-v')
     end
 
+    def info
+      output = cf("curl /v2/info")
+      JSON.parse(output)
+    end
+
     private
 
     attr_reader :logger, :command_runner
