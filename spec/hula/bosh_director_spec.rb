@@ -120,8 +120,12 @@ module Hula
       context 'when initialized with manifest' do
         it 'runs an errand' do
           runs_bosh_command "--deployment #{manifest_path} run errand an-errand-name"
-
           bosh_director.run_errand('an-errand-name')
+        end
+
+        it 'keeps the errand alive' do
+          runs_bosh_command "--deployment #{manifest_path} run errand an-errand-name --keep-alive"
+          bosh_director.run_errand('an-errand-name', keep_alive: true)
         end
       end
 
@@ -148,6 +152,12 @@ module Hula
           runs_bosh_command '--deployment /some/custom/path run errand an-errand-name'
 
           bosh_director.run_errand('an-errand-name', manifest_path: '/some/custom/path')
+        end
+
+        it 'keeps the errand alive' do
+          runs_bosh_command '--deployment /some/custom/path run errand an-errand-name --keep-alive'
+
+          bosh_director.run_errand('an-errand-name', manifest_path: '/some/custom/path', keep_alive: true)
         end
       end
     end

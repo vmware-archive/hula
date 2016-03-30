@@ -55,8 +55,14 @@ module Hula
       run_bosh(cmd.join(' '))
     end
 
-    def run_errand(name, manifest_path: default_manifest_path)
-      run_bosh("--deployment #{manifest_path} run errand #{name}")
+    def run_errand(name, manifest_path: default_manifest_path, keep_alive: false)
+        command = "--deployment #{manifest_path} run errand #{name}"
+
+      if keep_alive
+        command << " --keep-alive"
+      end
+
+      run_bosh(command)
     end
 
     def recreate_all(jobs)
