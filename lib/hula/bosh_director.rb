@@ -244,7 +244,9 @@ module Hula
       http.use_ssl = target_uri.scheme == 'https'
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-      response = http.get('/deployments')
+      request = Net::HTTP::Get.new('/deployments')
+      request.basic_auth username, password
+      response = http.request request
 
       unless response.is_a? Net::HTTPSuccess
         fail DirectorIsBroken, "Failed to GET /deployments from #{target_uri}. Returned:\n\n#{response.to_hash}\n\n#{response.body}"

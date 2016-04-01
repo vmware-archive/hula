@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/pivotal-cf-experimental/hula'
   spec.license       = 'proprietary'
 
-  spec.required_ruby_version  = '>= 2.1.0'
+  spec.required_ruby_version  = '>= 2.1'
 
   spec.files         = Dir.glob('lib/**/*') + ['LEGAL']
   spec.require_paths = ['lib']
