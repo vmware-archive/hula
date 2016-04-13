@@ -23,6 +23,10 @@ module Hula
         @job_hash.fetch('properties')
       end
 
+      def instances
+        @job_hash.fetch('instances')
+      end
+
       private
 
       attr_reader :job_hash

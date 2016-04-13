@@ -113,6 +113,7 @@ RSpec.describe Hula::BoshManifest do
         'jobs' => [
           {
             'name' => 'job-name',
+            'instances' => 2,
             'networks' => [
               {
                 'name' => 'network-name',
@@ -128,6 +129,7 @@ RSpec.describe Hula::BoshManifest do
       it 'returns job information' do
         job = bosh_manifest.job('job-name')
         expect(job.static_ips).to eq(%w(10.0.0.1 10.0.0.2))
+        expect(job.instances).to eq(2)
       end
     end
 
