@@ -33,7 +33,7 @@ RSpec.describe Hula::HttpProxyUpstreamSocks do
 
   let(:socks_proxy) {
     proxy = Struct.new(:socks_host, :socks_port)
-    proxy.new('localhost', socks_proxy_port)
+    proxy.new('0.0.0.0', socks_proxy_port)
   }
 
   def proxy(args = {})
@@ -46,7 +46,7 @@ RSpec.describe Hula::HttpProxyUpstreamSocks do
     let(:http_server_thread) do
       Thread.new do
         app = ->(env) { [200, {'Content-Type' => 'text/html'}, ['test_response_body']] }
-        Rack::Handler::WEBrick.run(app, { :Host => 'localhost', :Port => http_port })
+        Rack::Handler::WEBrick.run(app, { :Host => '0.0.0.0', :Port => http_port })
       end
     end
 
@@ -57,20 +57,20 @@ RSpec.describe Hula::HttpProxyUpstreamSocks do
           v, c, port, _, _, _, _, user = data.unpack("CCnC4a*")
           return { :close => "\0\x5b\0\0\0\0\0\0" }  if v != 4 or c != 1
           return  if ! idx = user.index("\0")
-          { :remote => "localhost:#{port}",
+          { :remote => "0.0.0.0:#{port}",
             :reply => "\0\x5a\0\0\0\0\0\0",
             :data => data[idx+9..-1] }
         })
-        ProxyMachine.run('socks_proxy', 'localhost', socks_proxy_port)
+        ProxyMachine.run('socks_proxy', '0.0.0.0', socks_proxy_port)
       end
     end
 
     before do
       http_server_thread
-      wait_for_port(host: 'localhost', port: http_port)
+      wait_for_port(host: '0.0.0.0', port: http_port)
 
       socks_server_process
-      wait_for_port(host: 'localhost', port: socks_proxy.socks_port)
+      wait_for_port(host: '0.0.0.0', port: socks_proxy.socks_port)
 
       proxy.start
     end
@@ -82,8 +82,8 @@ RSpec.describe Hula::HttpProxyUpstreamSocks do
       Process.wait(socks_server_process)
     end
 
-    let(:http_server_uri) { URI::HTTP.build(:host => 'localhost', :port => http_port.to_i) }
-    let(:http_proxy_uri) { URI::HTTP.build(:host => 'localhost', :port => proxy.http_port.to_i) }
+    let(:http_server_uri) { URI::HTTP.build(:host => '0.0.0.0', :port => http_port.to_i) }
+    let(:http_proxy_uri) { URI::HTTP.build(:host => '0.0.0.0', :port => proxy.http_port.to_i) }
 
     it 'allows connections via a http proxy, upstreamed through a SOCKS proxy, to a http server' do
       expect(
