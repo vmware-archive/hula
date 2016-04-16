@@ -27,10 +27,11 @@ jobs:
           trigger: true
       - task: run-tests
         file: hula/ci/run-tests.yml
-    - put: alert
-      params:
-        text: "Sorry, I don't know how to tell you this, but 'hula' pipeline is broken."
-        channel: "#london-services"
-        username: concourse
-        icon_url: http://cl.ly/image/3e1h0H3H2s0P/concourse-logo.png
+        on_failure:
+        - put: alert
+          params:
+            text: "Sorry, I don't know how to tell you this, but 'hula' pipeline is broken."
+            channel: "#london-services"
+            username: concourse
+            icon_url: http://cl.ly/image/3e1h0H3H2s0P/concourse-logo.png
 
