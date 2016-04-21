@@ -557,5 +557,14 @@ module Hula
         bosh_director.recreate_all(['cf-cassandra-broker', 'cassandra_node'])
       end
     end
+
+    describe '#download_manifest' do
+      let(:plain_manifest) { File.read(asset_path('example_manifest.yaml')) }
+
+      it 'downloads the manifest' do
+        expect(command_runner).to receive(:run).with(/download manifest cf-rabbitmq/).and_return(plain_manifest)
+        expect(bosh_director.download_manifest('cf-rabbitmq')).to eq(YAML.load(plain_manifest))
+      end
+    end
   end
 end

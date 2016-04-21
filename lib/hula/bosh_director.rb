@@ -169,6 +169,11 @@ module Hula
       job_ip_map.fetch(job, [])
     end
 
+    def download_manifest(deployment_name)
+      output = run_bosh("download manifest #{deployment_name}")
+      YAML.load(output)
+    end
+
     private
 
     attr_reader :target_url, :username, :password, :command_runner, :logger
