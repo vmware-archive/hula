@@ -107,6 +107,48 @@ RSpec.describe Hula::BoshManifest do
     end
   end
 
+  describe "#jobs_by_regex" do
+    let(:manifest) do
+      {
+        'jobs' => [
+          {
+            'name' => 'job-name',
+            'instances' => 2,
+            'networks' => [
+              'name' => 'network-name',
+              'static_ips' => %w(10.0.0.1 10.0.0.2)
+            ]
+          },
+          {
+            'name' => 'job-name-1',
+            'instances' => 5,
+            'networks' => [
+              'name' => 'network-name-1',
+              'static_ips' => %w(10.0.0.6 10.0.0.7)
+            ]
+          }
+        ]
+      }.to_yaml
+    end
+
+    context 'when a job exist' do
+      it 'returns an array of jobs' do
+        jobs = bosh_manifest.jobs_by_regexp(/^job-name/)
+        expect(jobs.length).to eq(2)
+        expect(jobs[0].instances).to eq(2)
+        expect(jobs[1].instances).to eq(5)
+      end
+    end
+
+    context 'when there are no jobs matched' do
+      it 'raises an error' do
+        expect {
+          bosh_manifest.jobs_by_regexp(/jerb-name/)
+        }.to raise_error(/Could not find job name/)
+      end
+    end
+  end
+
   describe '#job' do
     let(:manifest) do
       {

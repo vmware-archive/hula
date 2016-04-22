@@ -48,6 +48,15 @@ module Hula
       raise "Could not find deployment name in #{manifest_hash.inspect}"
     end
 
+    def jobs_by_regexp(job_name_regexp)
+      jobs_property = manifest_hash.fetch('jobs')
+      jobs = jobs_property.select { |job| !job.fetch('name').match(job_name_regexp).nil? }
+
+      fail "Could not find job name '#{job_name_regexp}' in job list: #{jobs_property.inspect}" if jobs.empty?
+
+      jobs.map { |job| Job.new(job) }
+    end
+
     def job(job_name)
       jobs = manifest_hash.fetch('jobs')
       job = jobs.detect { |j| j.fetch('name') == job_name }
