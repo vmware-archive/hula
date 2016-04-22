@@ -171,7 +171,8 @@ module Hula
 
     def download_manifest(deployment_name)
       output = run_bosh("download manifest #{deployment_name}")
-      YAML.load(output)
+      manifest_output = output.split("\n")[1..-1].join("\n")
+      YAML.load("#{manifest_output}")
     end
 
     private
