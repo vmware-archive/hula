@@ -557,18 +557,5 @@ module Hula
         bosh_director.recreate_all(['cf-cassandra-broker', 'cassandra_node'])
       end
     end
-
-    describe '#download_manifest' do
-      let(:command_output) do
-        header_string = "Acting as user 'director' on deployment 'p-rabbitmq-3eb910c746b4389a3ba7' on 'p-bosh-e1d36d7d77e6b2d0e9d2'\n"
-        file_output = File.read(asset_path('example_manifest.yaml'))
-        header_string + file_output
-      end
-
-      it 'downloads the manifest' do
-        expect(command_runner).to receive(:run).with(/download manifest cf-rabbitmq/).and_return(command_output)
-        expect(bosh_director.download_manifest('cf-rabbitmq')).to eq(yaml_manifest)
-      end
-    end
   end
 end

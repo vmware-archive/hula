@@ -170,9 +170,10 @@ module Hula
     end
 
     def download_manifest(deployment_name)
-      output = run_bosh("download manifest #{deployment_name}")
-      manifest_output = output.split("\n")[1..-1].join("\n")
-      YAML.load("#{manifest_output}")
+      Tempfile.open 'manifest' do |file|
+        run_bosh("download manifest #{deployment_name} #{file.path}")
+        return YAML.load_file("#{file.path}")
+      end
     end
 
     private
