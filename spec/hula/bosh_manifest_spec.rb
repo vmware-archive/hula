@@ -147,6 +147,29 @@ RSpec.describe Hula::BoshManifest do
         }.to raise_error(/Could not find job name/)
       end
     end
+
+    context 'with a BOSH v2 style manifest' do
+      let(:manifest) do
+        {
+          'instance_groups' => [
+            {
+              'name' => 'job-name',
+              'instances' => 2,
+              'networks' => [
+                'name' => 'network-name',
+                'static_ips' => %w(10.0.0.1 10.0.0.2)
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      it 'returns an array of jobs' do
+        jobs = bosh_manifest.jobs_by_regexp(/^job-name/)
+        expect(jobs.length).to eq(1)
+        expect(jobs[0].instances).to eq(2)
+      end
+    end
   end
 
   describe '#job' do
@@ -182,6 +205,30 @@ RSpec.describe Hula::BoshManifest do
         }.to raise_error(/Could not find job name 'jerb-name' in job list: \[/)
       end
     end
+
+    context 'with a BOSH v2 style manifest' do
+      let(:manifest) do
+        {
+          'instance_groups' => [
+            {
+              'name' => 'job-name',
+              'instances' => 2,
+              'networks' => [
+                'name' => 'network-name',
+                'static_ips' => %w(10.0.0.1 10.0.0.2)
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      it 'returns an array of jobs' do
+        job = bosh_manifest.job('job-name')
+        expect(job.static_ips).to eq(%w(10.0.0.1 10.0.0.2))
+        expect(job.instances).to eq(2)
+      end
+    end
+
   end
 
   describe '#property' do

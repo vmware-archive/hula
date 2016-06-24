@@ -49,7 +49,13 @@ module Hula
     end
 
     def jobs_by_regexp(job_name_regexp)
-      jobs_property = manifest_hash.fetch('jobs')
+      if manifest_hash.has_key?('instance_groups')
+        key = "instance_groups"
+      else
+        key = "jobs"
+      end
+
+      jobs_property = manifest_hash.fetch(key)
       jobs = jobs_property.select { |job| !job.fetch('name').match(job_name_regexp).nil? }
 
       fail "Could not find job name '#{job_name_regexp}' in job list: #{jobs_property.inspect}" if jobs.empty?
@@ -58,7 +64,13 @@ module Hula
     end
 
     def job(job_name)
-      jobs = manifest_hash.fetch('jobs')
+      if manifest_hash.has_key?('instance_groups')
+        key = "instance_groups"
+      else
+        key = "jobs"
+      end
+
+      jobs = manifest_hash.fetch(key)
       job = jobs.detect { |j| j.fetch('name') == job_name }
 
       fail "Could not find job name '#{job_name}' in job list: #{jobs.inspect}" if job.nil?
