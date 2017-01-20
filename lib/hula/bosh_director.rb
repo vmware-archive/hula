@@ -181,7 +181,12 @@ module Hula
     attr_reader :target_url, :username, :password, :command_runner, :logger
 
     def job_properties(job_name)
-      manifest.fetch('jobs').find { |job| job.fetch('name') == job_name }.tap do |properties|
+      if manifest.has_key?('instance_groups')
+        key = "instance_groups"
+      else
+        key = "jobs"
+      end
+      manifest.fetch(key).find { |job| job.fetch('name') == job_name }.tap do |properties|
         fail ArgumentError.new('Job not found in manifest') unless properties
       end
     end

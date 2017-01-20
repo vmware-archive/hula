@@ -477,25 +477,36 @@ module Hula
     end
 
     describe '#recreate' do
-      context 'when the job does not exist in the manifest' do
-        it 'raises an error' do
-          expect { bosh_director.recreate('non_existant_job') }.to raise_error(ArgumentError)
-        end
-      end
+      scenarios = [
+        {bosh_version: 'v1', manifest: 'example_manifest.yaml'},
+        {bosh_version: 'v2', manifest: 'example_v2_manifest.yaml'},
+      ]
 
-      context 'when the job exists in the manifest' do
-        it 'restarts each instance' do
-          runs_bosh_command 'recreate cassandra_node 0'
-          runs_bosh_command 'recreate cassandra_node 1'
-          runs_bosh_command 'recreate cassandra_node 2'
-          bosh_director.recreate('cassandra_node')
-        end
-      end
+      scenarios.each do |scenario|
+        context "with a BOSH #{scenario[:bosh_version]} manifest" do
+          let(:yaml_manifest) { YAML.load_file(asset_path(scenario[:manifest])) }
 
-      context 'when the job has 0 instances' do
-        it 'does not attempt to recerate any instances' do
-          expect(command_runner).not_to receive(:run).with(/recreate/)
-          bosh_director.recreate('cassandra_node_with_no_instances')
+          context 'when the job does not exist in the manifest' do
+              it 'raises an error' do
+                expect { bosh_director.recreate('non_existant_job') }.to raise_error(ArgumentError)
+              end
+            end
+
+          context 'when the job exists in the manifest' do
+            it 'restarts each instance' do
+              runs_bosh_command 'recreate cassandra_node 0'
+              runs_bosh_command 'recreate cassandra_node 1'
+              runs_bosh_command 'recreate cassandra_node 2'
+              bosh_director.recreate('cassandra_node')
+            end
+          end
+
+          context 'when the job has 0 instances' do
+            it 'does not attempt to recerate any instances' do
+              expect(command_runner).not_to receive(:run).with(/recreate/)
+              bosh_director.recreate('cassandra_node_with_no_instances')
+            end
+          end
         end
       end
     end

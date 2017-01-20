@@ -1,0 +1,130 @@
+director_uuid: f28109b2-1dac-4899-8113-82e3dd26b57f
+instance_groups:
+- instances: 3
+  name: cassandra_node
+  networks:
+  - name: infrastructure
+    static_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+  azs: [z1]
+  persistent_disk_type: 1GB
+  vm_type: default_vm
+  stemcell: lucid
+  release: cassandra
+  properties:
+    example: property
+  jobs:
+  - name: cassandra_node
+    release: cassandra
+  - name: ntpd
+    release: cassandra
+- instances: 0
+  name: cassandra_node_with_no_instances
+  networks:
+  - name: infrastructure
+    static_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+  azs: [z1]
+  persistent_disk_type: 1GB
+  vm_type: default_vm
+  stemcell: lucid
+  release: cassandra
+  jobs:
+  - name: cassandra_node
+    release: cassandra
+  - name: ntpd
+    release: cassandra
+- instances: 1
+  name: cf-cassandra-broker
+  networks:
+  - name: infrastructure
+    static_ips:
+    - 10.10.34.5
+  persistent_disk_type: 1GB
+  azs: [z1]
+  vm_type: default_vm
+  stemcell: lucid
+  release: cassandra
+  jobs:
+  - name: cf-cassandra-broker
+    release: cassandra
+  - name: ntpd
+    release: cassandra
+- instances: 1
+  lifecycle: errand
+  name: broker-registrar
+  networks:
+  - name: infrastructure
+  properties:
+    broker:
+      host: 10.10.34.5
+      name: cassandra
+      password: fakeadmin
+      username: admin
+  release: cassandra
+  azs: [z1]
+  vm_type: default_vm
+  stemcell: lucid
+  jobs:
+  - name: broker-registrar
+    release: cassandra
+- instances: 1
+  lifecycle: errand
+  name: broker-deregistrar
+  networks:
+  - name: infrastructure
+  azs: [z1]
+  vm_type: default_vm
+  stemcell: lucid
+  properties:
+    broker:
+      host: 10.10.34.5
+      name: cassandra
+      password: fakeadmin
+      username: admin
+  release: cassandra
+  jobs:
+  - name: broker-deregistrar
+    release: cassandra
+meta:
+  stemcell:
+    name: bosh-aws-xen-ubuntu-lucid-go_agent
+    version: latest
+name: cassandra
+properties:
+  cassandra:
+    admin_password: fakecomtruise
+    broker:
+      http_auth:
+        password: fakeadmin
+        username: admin
+    cluster_nodes_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+    cluster_seeds_num: 3
+    jmx_password: fakebluntlily
+    network: infrastructure
+  cf:
+    admin_password: fakepupelo468-coemptor
+    admin_username: admin
+    api_url: https://ccng.cfintegration.cf-app.com
+  ntpd:
+    external_server: 0.uk.pool.ntp.org
+    other_node_ips:
+    - 10.10.34.6
+    - 10.10.34.7
+    - 10.10.34.8
+    preferred_node_ip:
+    - 10.10.34.5
+releases:
+- name: cassandra
+  version: latest
+stemcells:
+  - alias: lucid
+    name: bosh-aws-xen-ubuntu-lucid-go_agent
+    version: latest
