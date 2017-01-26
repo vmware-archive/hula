@@ -55,6 +55,26 @@ module Hula
 
           bosh_director
         end
+
+      end
+
+      context 'when $BOSH_CERT env var exists' do
+        before(:each) do
+          ENV["BOSH_CERT"] = "any content"
+        end
+
+        it 'targets using --ca-cert' do
+          expect(command_runner).to receive(:run)
+            .with(/bosh --ca-cert cert.pem -v -n --config '#{bosh_config_path}' target #{bosh_target}/)
+          runs_bosh_command "deployment #{manifest_path}"
+          runs_bosh_command "login #{username} #{password}"
+
+          bosh_director
+        end
+
+        after(:each) do
+          ENV["BOSH_CERT"] = nil
+        end
       end
 
       context 'when deployment manifest argument is nil' do
