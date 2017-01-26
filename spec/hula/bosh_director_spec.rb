@@ -20,10 +20,12 @@ module Hula
     let(:bosh_target) { 'http://bosh:25555' }
     let(:manifest_path) { 'path/to/manifest.yml' }
     let(:bosh_config_path) { '/tmp/path/to/bosh/config' }
+    let(:temp_logfile_directory) { '/tmp/path/to/logfiles' }
     let(:username) { 'admin' }
     let(:password) { 'p4ssw0rd' }
     let(:command_runner) { double(CommandRunner, run: nil) }
     let(:bosh_command_prefix) { "bosh -v -n --config '#{bosh_config_path}'" }
+    let(:bosh_command_prefix_interactive) { "bosh -v --config '#{bosh_config_path}'" }
     let(:bosh_director_args) do
       {
         target_url: bosh_target,
@@ -43,7 +45,11 @@ module Hula
     end
 
     def runs_bosh_command(command)
-      expect(command_runner).to receive(:run).with(/#{bosh_command_prefix} #{command}/).ordered
+      expect(command_runner).to receive(:run).with("#{bosh_command_prefix} #{command}").ordered
+    end
+
+    def runs_bosh_command_interactive(command)
+      expect(command_runner).to receive(:run).with("#{bosh_command_prefix_interactive} #{command}").ordered
     end
 
     describe '.initialize' do
@@ -51,7 +57,7 @@ module Hula
         it 'targets, sets the deployment, and logs in to bosh' do
           runs_bosh_command "target #{bosh_target}"
           runs_bosh_command "deployment #{manifest_path}"
-          runs_bosh_command "login #{username} #{password}"
+          runs_bosh_command_interactive "login #{username} #{password}"
 
           bosh_director
         end
@@ -65,9 +71,9 @@ module Hula
 
         it 'targets using --ca-cert' do
           expect(command_runner).to receive(:run)
-            .with(/bosh --ca-cert cert.pem -v -n --config '#{bosh_config_path}' target #{bosh_target}/)
+            .with(/bosh -v --ca-cert cert.pem -n --config '#{bosh_config_path}' target #{bosh_target}/)
           runs_bosh_command "deployment #{manifest_path}"
-          runs_bosh_command "login #{username} #{password}"
+          runs_bosh_command_interactive "login #{username} #{password}"
 
           bosh_director
         end
@@ -82,7 +88,7 @@ module Hula
 
         it 'just targets and logs in to bosh' do
           runs_bosh_command "target #{bosh_target}"
-          runs_bosh_command "login #{username} #{password}"
+          runs_bosh_command_interactive "login #{username} #{password}"
 
           bosh_director
         end
@@ -101,7 +107,7 @@ module Hula
 
         it 'just targets and logs in to bosh' do
           runs_bosh_command "target #{bosh_target}"
-          runs_bosh_command "login #{username} #{password}"
+          runs_bosh_command_interactive "login #{username} #{password}"
 
           bosh_director
         end
@@ -222,11 +228,12 @@ module Hula
 
       before do
         allow(command_runner).to receive(:run).with(/tar tf/).and_return(tar_tf_output)
+        allow(Dir).to receive(:tmpdir).and_return(temp_logfile_directory)
       end
 
       describe '#job_logfiles' do
         it 'returns a list of log files' do
-          runs_bosh_command 'logs cf-redis-broker 0 --job --dir'
+          runs_bosh_command "logs cf-redis-broker 0 --job --dir #{temp_logfile_directory}"
           logfiles = bosh_director.job_logfiles('cf-redis-broker')
 
           expect(logfiles).not_to include(/monit/)
@@ -237,7 +244,7 @@ module Hula
 
       describe '#has_logfiles?' do
         it 'returns true if the job has the log file' do
-          runs_bosh_command 'logs cf-redis-broker 0 --job --dir'
+          runs_bosh_command "logs cf-redis-broker 0 --job --dir #{temp_logfile_directory}"
 
           expect(bosh_director.has_logfiles?('cf-redis-broker', ['nginx_ctl.err.log', 'cf-redis-broker.stderr.log'])).to be_truthy
           expect(bosh_director.has_logfiles?('cf-redis-broker', ['another.err.log'])).to be_falsey

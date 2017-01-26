@@ -221,12 +221,24 @@ module Hula
     def target_and_login
       run_bosh("target #{target_url}", :look_for_cert)
       run_bosh("deployment #{default_manifest_path}") if default_manifest_path?
-      run_bosh("login #{username} #{password}")
+      run_bosh("login #{username} #{password}", :interactive)
     end
 
-    def run_bosh(cmd, look_for_cert=nil)
-      prefix = bosh_cmd_prefix(look_for_cert == :look_for_cert)
-      command = "#{prefix} '#{bosh_config_path}' #{cmd}"
+    def run_bosh(cmd, *modifiers)
+      cmd_list = ['bosh -v']
+      if modifiers.include? :look_for_cert and ENV['BOSH_CERT']
+        cmd_list.push('--ca-cert', 'cert.pem')
+      end
+      if not modifiers.include? :interactive
+        cmd_list.push('-n')
+      end
+
+      cmd_list.push('--config', "'#{bosh_config_path}'")
+
+      cmd_list.push(cmd)
+
+      command = cmd_list.join(' ')
+
       logger.info(command)
 
       command_runner.run(command)
@@ -234,14 +246,6 @@ module Hula
       logger.error(e.message)
       health_check!
       raise e
-    end
-
-    def bosh_cmd_prefix(look_for_cert=false)
-      if ENV['BOSH_CERT'] and look_for_cert
-       'bosh --ca-cert cert.pem -v -n --config'
-      else
-       'bosh -v -n --config'
-      end
     end
 
     def bosh_config_path
