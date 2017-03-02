@@ -173,6 +173,11 @@ module Hula
       cf("delete-service -f #{name}", allow_failure: allow_failure)
     end
 
+    def get_service_status(service_name)
+      output = cf("service #{service_name}")
+      output[/^Status: .*$/].gsub('Status: ', '')
+    end
+
     def assert_instance_is_in_services_list(service_name)
       output = cf('services')
       unless output.include?(service_name)

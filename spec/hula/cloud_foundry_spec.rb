@@ -320,4 +320,99 @@ describe Hula::CloudFoundry do
       expect(cloud_foundry.auth_token).to eq("bearer dummy-token")
     end
   end
+
+  describe '#get_service_status' do
+    let(:command_runner) { instance_double(Hula::CommandRunner, run: nil) }
+
+    let(:options) do
+      {
+        domain: '10.244.0.34.xip.io',
+        api_url: 'api.10.244.0.34.xip.io',
+        username: 'admin',
+        password: 'admin',
+        logger: Logger.new('/dev/null'),
+        command_runner: command_runner,
+        target_and_login: false
+      }
+    end
+
+    before do
+      allow(command_runner).to receive(:run).with('cf service foo', anything).and_return(
+        <<-OUTPUT.strip_heredoc
+        Service instance: foo
+        Service: p-redis-on-demand
+        Bound apps:
+        Tags:
+        Plan: small-odb-redis-cache
+        Description: On demand Redis
+        Documentation url:
+        Dashboard:
+
+        Last Operation
+        Status: create succeeded
+        Message: Instance provisioning in progress
+        Started: 2017-03-02T13:38:16Z
+        Updated: 2017-03-02T13:38:20Z
+        OUTPUT
+      )
+    end
+
+    it 'returns create succeeded' do
+      expect(cloud_foundry.get_service_status('foo')).to eq('create succeeded')
+    end
+
+    context 'when create service fails' do
+      before do
+        allow(command_runner).to receive(:run).with('cf service foo', anything).and_return(
+          <<-OUTPUT.strip_heredoc
+          Service instance: foo
+          Service: p-redis-on-demand
+          Bound apps:
+          Tags:
+          Plan: small-odb-redis-cache
+          Description: On demand Redis
+          Documentation url:
+          Dashboard:
+
+          Last Operation
+          Status: failed
+          Message: Instance provisioning in progress
+          Started: 2017-03-02T13:38:16Z
+          Updated: 2017-03-02T13:38:20Z
+          OUTPUT
+        )
+      end
+
+      it 'returns failed' do
+        expect(cloud_foundry.get_service_status('foo')).to eq('failed')
+      end
+    end
+
+    context 'when create service is in progress' do
+      before do
+        allow(command_runner).to receive(:run).with('cf service foo', anything).and_return(
+          <<-OUTPUT.strip_heredoc
+          Service instance: foo
+          Service: p-redis-on-demand
+          Bound apps:
+          Tags:
+          Plan: small-odb-redis-cache
+          Description: On demand Redis
+          Documentation url:
+          Dashboard:
+
+          Last Operation
+          Status: create in progress
+          Message: Instance provisioning in progress
+          Started: 2017-03-02T13:38:16Z
+          Updated: 2017-03-02T13:38:20Z
+          OUTPUT
+        )
+      end
+
+      it 'returns create in progress' do
+        expect(cloud_foundry.get_service_status('foo')).to eq('create in progress')
+      end
+    end
+  end
 end
