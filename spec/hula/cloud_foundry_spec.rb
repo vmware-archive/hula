@@ -414,5 +414,20 @@ describe Hula::CloudFoundry do
         expect(cloud_foundry.get_service_status('foo')).to eq('create in progress')
       end
     end
+
+    context 'when service instance is not found' do
+      before do
+        allow(command_runner).to receive(:run).with('cf service foo', anything).and_return(
+          <<-OUTPUT.strip_heredoc
+          FAILED
+          Service instance foo not found
+          OUTPUT
+        )
+      end
+
+      it 'returns service instance not found' do
+        expect(cloud_foundry.get_service_status('foo')).to eq('Service instance foo not found')
+      end
+    end
   end
 end

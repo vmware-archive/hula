@@ -175,7 +175,13 @@ module Hula
 
     def get_service_status(service_name)
       output = cf("service #{service_name}")
-      output[/^Status: .*$/].gsub('Status: ', '')
+
+      missing_instance_message = "Service instance #{service_name} not found"
+      if output.include? missing_instance_message
+        missing_instance_message
+      else
+        output[/^Status: .*$/].gsub('Status: ', '')
+      end
     end
 
     def assert_instance_is_in_services_list(service_name)
