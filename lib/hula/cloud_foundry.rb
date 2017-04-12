@@ -173,8 +173,10 @@ module Hula
       cf("delete-service -f #{name}", allow_failure: allow_failure)
     end
 
-    def get_service_status(service_name)
-      output = cf("service #{service_name}")
+    def get_service_status(service_name, options = {})
+      allow_failure = options.fetch(:allow_failure, false)
+
+      output = cf("service #{service_name}", allow_failure: allow_failure)
 
       missing_instance_message = "Service instance #{service_name} not found"
       if output.include? missing_instance_message
