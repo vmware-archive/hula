@@ -27,7 +27,9 @@ module Hula
       password:,
       manifest_path: nil,
       command_runner: CommandRunner.new,
-      logger: default_logger
+      logger: default_logger,
+      certificate_path: nil,
+      env_login: false
     )
       @target_url            = target_url
       @username              = username
@@ -35,6 +37,8 @@ module Hula
       @default_manifest_path = manifest_path
       @command_runner        = command_runner
       @logger                = logger
+      @certificate_path      = certificate_path
+      @env_login             = env_login
 
       target_and_login
     end
@@ -178,7 +182,8 @@ module Hula
 
     private
 
-    attr_reader :target_url, :username, :password, :command_runner, :logger
+    attr_reader :target_url, :username, :password, :command_runner, :logger,
+      :certificate_path, :env_login
 
     def job_properties(job_name)
       if manifest.has_key?('instance_groups')
@@ -219,9 +224,21 @@ module Hula
     end
 
     def target_and_login
-      run_bosh("target #{target_url}")
+      target_cmd = "target #{target_url}"
+      if certificate_path
+        target_cmd = "--ca-cert #{certificate_path} #{target_cmd}"
+      end
+
+      run_bosh(target_cmd)
       run_bosh("deployment #{default_manifest_path}") if default_manifest_path?
-      run_bosh("login #{username} #{password}")
+
+      if not env_login
+        run_bosh("login #{username} #{password}")
+      else
+        if not ENV.has_key? 'BOSH_CLIENT' or not ENV.has_key? 'BOSH_CLIENT_SECRET'
+          raise 'BOSH_CLIENT and BOSH_CLIENT_SECRET must both be set in the ENV'
+        end
+      end
     end
 
     def run_bosh(cmd)

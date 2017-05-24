@@ -24,6 +24,8 @@ module Hula
     let(:password) { 'p4ssw0rd' }
     let(:command_runner) { double(CommandRunner, run: nil) }
     let(:bosh_command_prefix) { "bosh -v -n --config '#{bosh_config_path}'" }
+    let(:certificate_path) { nil }
+    let(:env_login) { false }
     let(:bosh_director_args) do
       {
         target_url: bosh_target,
@@ -31,7 +33,9 @@ module Hula
         username: username,
         password: password,
         command_runner: command_runner,
-        logger: Logger.new('/dev/null')
+        logger: Logger.new('/dev/null'),
+        certificate_path: certificate_path,
+        env_login: env_login
       }
     end
     let(:bosh_director) { BoshDirector.new(bosh_director_args) }
@@ -44,6 +48,10 @@ module Hula
 
     def runs_bosh_command(command)
       expect(command_runner).to receive(:run).with(/#{bosh_command_prefix} #{command}/).ordered
+    end
+
+    def does_not_run_bosh_command(command)
+      expect(command_runner).not_to receive(:run).with(/#{bosh_command_prefix} #{command}/)
     end
 
     describe '.initialize' do
@@ -86,6 +94,42 @@ module Hula
           bosh_director
         end
       end
+
+      context 'when certificate is provided' do
+        let(:certificate_path) { 'path/to/certificate.cert' }
+
+        it 'should be passed to the bosh target command' do
+          runs_bosh_command "--ca-cert #{certificate_path} target #{bosh_target}"
+          runs_bosh_command "deployment #{manifest_path}"
+          runs_bosh_command "login #{username} #{password}"
+
+          bosh_director
+        end
+      end
+
+      context 'when no skip flag is provided' do
+        let(:env_login) { true }
+
+        it 'targets, sets the deployment, but does not log in to bosh' do
+          ENV['BOSH_CLIENT'] = 'username'
+          ENV['BOSH_CLIENT_SECRET'] = 'password'
+
+          runs_bosh_command "target #{bosh_target}"
+          runs_bosh_command "deployment #{manifest_path}"
+          does_not_run_bosh_command "login #{username} #{password}"
+
+          bosh_director
+
+          ENV.delete('BOSH_CLIENT')
+          ENV.delete('BOSH_CLIENT_SECRET')
+        end
+
+        it 'raises an exception if BOSH_CLIENT and BOSH_CLIENT_SECRET are not set in the ENV' do
+          expect { bosh_director }.to raise_error(RuntimeError)
+        end
+      end
+
+
     end
 
     describe '#deploy' do
