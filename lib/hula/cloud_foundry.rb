@@ -284,6 +284,15 @@ module Hula
       JSON.parse(output)
     end
 
+    def cf(command, options = {})
+      allow_failure = options.fetch(:allow_failure, false)
+      cf_command = "cf #{command}"
+
+      logger.info(cf_command)
+
+      command_runner.run(cf_command, allow_failure: allow_failure)
+    end
+
     private
 
     attr_reader :logger, :command_runner
@@ -305,15 +314,6 @@ module Hula
 
     def default_command_runner
       @default_command_runner ||= CommandRunner.new(environment: env)
-    end
-
-    def cf(command, options = {})
-      allow_failure = options.fetch(:allow_failure, false)
-      cf_command = "cf #{command}"
-
-      logger.info(cf_command)
-
-      command_runner.run(cf_command, allow_failure: allow_failure)
     end
 
     def env
