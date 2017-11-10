@@ -82,6 +82,10 @@ module Hula
       manifest_hash.fetch('resource_pools')
     end
 
+    def properties
+      manifest_hash.fetch('properties')
+    end
+
     private
 
     attr_reader :manifest_hash
@@ -91,10 +95,6 @@ module Hula
         fail NoManifestPathGiven, 'Cannot save manifest without providing a path'
       end
       File.write(path, manifest_hash.to_yaml)
-    end
-
-    def properties
-      manifest_hash.fetch('properties')
     end
 
     def property_components(property_name)
