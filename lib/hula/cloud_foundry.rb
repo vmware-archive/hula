@@ -182,7 +182,7 @@ module Hula
       if output.include? missing_instance_message
         missing_instance_message
       else
-        output[/^Status: .*$/].gsub('Status: ', '')
+        output[/^Status: .*$/i].gsub(/Status:\s+/i, '')
       end
     end
 

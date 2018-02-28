@@ -361,6 +361,34 @@ describe Hula::CloudFoundry do
       expect(cloud_foundry.get_service_status('foo')).to eq('create succeeded')
     end
 
+    context 'when using new CF CLI' do
+      before do
+        allow(command_runner).to receive(:run).with('cf service foo', anything).and_return(
+          <<-OUTPUT.strip_heredoc
+          name:            cf-service-e3f1623d
+          service:         p-rabbitmq
+          bound apps:
+          tags:
+          plan:            standard
+          description:     RabbitMQ service to provide shared instances of this high-performance multi-protocol messaging broker.
+          documentation:
+          dashboard:       https://pivotal-rabbitmq.sys.indianyellow.cf-app.com/#/login/mu-f13d6938-d7fb-4f38-adba-580fafeaea3c-63var95oq62qh0epockc80v9va/1109609106924918457219576760747236301576
+
+          Showing status of last operation from service cf-service-e3f1623d...
+
+          status:    create succeeded
+          message:
+          started:   2018-02-28T12:28:04Z
+          updated:   2018-02-28T12:28:0
+          OUTPUT
+          )
+      end
+
+      it 'returns create succeeded' do
+        expect(cloud_foundry.get_service_status('foo')).to eq('create succeeded')
+      end
+    end
+
     context 'when create service fails' do
       before do
         allow(command_runner).to receive(:run).with('cf service foo', anything).and_return(
