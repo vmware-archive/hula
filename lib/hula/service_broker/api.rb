@@ -22,18 +22,19 @@ module Hula
       extend Forwardable
       def_delegators :catalog, :service_plan
 
-      def initialize(url:, username:, password:, http_client: HttpJsonClient.new)
+      def initialize(url:, username:, password:, http_client: HttpJsonClient.new, broker_api_version:)
         @http_client = http_client
 
         @url = URI(url)
         @username = username
         @password = password
+        @broker_api_version = broker_api_version
       end
 
       attr_reader :url
 
       def catalog
-        json = http_client.get(url_for('/v2/catalog'), auth: { username: username, password: password })
+        json = http_client.get(url_for('/v2/catalog'), auth: { username: username, password: password }, headers: { 'X-Broker-Api-Version': @broker_api_version })
         Catalog.new(json)
       end
 
@@ -72,7 +73,7 @@ module Hula
       end
 
       def debug
-        http_client.get(url_for('/debug'), auth: { username: username, password: password })
+        http_client.get(url_for('/debug'), auth: { username: username, password: password }, headers: { 'X-Broker-Api-Version': @broker_api_version })
       end
 
       private
@@ -84,7 +85,8 @@ module Hula
             service_id: service_id,
             plan_id: plan_id,
           },
-          auth: { username: username, password: password }
+          auth: { username: username, password: password },
+          headers: { 'X-Broker-Api-Version': @broker_api_version }
         )
       end
 
@@ -94,7 +96,8 @@ module Hula
           auth: {
             username: username,
             password: password
-          }
+          },
+          headers: { 'X-Broker-Api-Version': @broker_api_version }
         )
       end
 
@@ -102,14 +105,16 @@ module Hula
         http_client.put(
           url_for("/v2/service_instances/#{service_instance_id}/service_bindings/#{binding_id}"),
           body: {},
-          auth: { username: username, password: password }
+          auth: { username: username, password: password },
+          headers: { 'X-Broker-Api-Version': @broker_api_version }
         )
       end
 
       def http_unbind_instance(service_instance_id:, binding_id:)
         http_client.delete(
           url_for("/v2/service_instances/#{service_instance_id}/service_bindings/#{binding_id}"),
-          auth: { username: username, password: password }
+          auth: { username: username, password: password },
+          headers: { 'X-Broker-Api-Version': @broker_api_version }
         )
       end
 

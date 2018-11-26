@@ -20,7 +20,8 @@ RSpec.describe Hula::ServiceBroker::Api do
       url:        'https://foobar.com/baz',
       username:   'admin',
       password:   'hunter2',
-      http_client: http_client
+      http_client: http_client,
+      broker_api_version: '2.12'
     )
   end
 
@@ -34,7 +35,8 @@ RSpec.describe Hula::ServiceBroker::Api do
         auth: {
           username: 'admin',
           password: 'hunter2'
-        }
+        },
+        headers: { 'X-Broker-Api-Version': '2.12' }
       ).and_return(debug_response)
     end
 
@@ -52,7 +54,8 @@ RSpec.describe Hula::ServiceBroker::Api do
         auth: {
           username: 'admin',
           password: 'hunter2'
-        }
+        },
+        headers: { 'X-Broker-Api-Version': '2.12' }
       ).and_return(
         services: [
           {
@@ -75,6 +78,7 @@ RSpec.describe Hula::ServiceBroker::Api do
     subject(:catalog) { api.catalog }
 
     it { is_expected.to be_a(Hula::ServiceBroker::Catalog) }
+
     it 'has correct catalog' do
       expect(catalog).to eq(
         Hula::ServiceBroker::Catalog.new(
@@ -110,7 +114,8 @@ RSpec.describe Hula::ServiceBroker::Api do
         auth: {
           username: 'admin',
           password: 'hunter2'
-        }
+        },
+        headers: { 'X-Broker-Api-Version': '2.12' }
       )
     end
 
@@ -124,7 +129,8 @@ RSpec.describe Hula::ServiceBroker::Api do
         auth: {
             username: 'admin',
             password: 'hunter2'
-        }
+        },
+        headers: { 'X-Broker-Api-Version': '2.12' }
       )
 
       service = Hula::ServiceBroker::Service.new(
@@ -159,6 +165,7 @@ RSpec.describe Hula::ServiceBroker::Api do
         service.plans.first,
         service_instance_id: 'service_instance_id'
       )
+
       expect(service_instance).to eq(Hula::ServiceBroker::ServiceInstance.new(id: 'service_instance_id'))
     end
   end
@@ -170,10 +177,12 @@ RSpec.describe Hula::ServiceBroker::Api do
                                auth: {
                                  username: 'admin',
                                  password: 'hunter2'
-                               }
+                               },
+                               headers: { 'X-Broker-Api-Version': '2.12' }
                              )
 
       service_instance = Hula::ServiceBroker::ServiceInstance.new(id: 'service_instance_id')
+
       api.deprovision_instance(service_instance)
     end
   end
@@ -186,7 +195,8 @@ RSpec.describe Hula::ServiceBroker::Api do
           auth: {
               username: 'admin',
               password: 'hunter2'
-          }
+          },
+          headers: { 'X-Broker-Api-Version': '2.12' }
       ).and_return(credentials: { secret: 'i dislike cabbage'})
     end
 
@@ -197,7 +207,8 @@ RSpec.describe Hula::ServiceBroker::Api do
          auth: {
              username: 'admin',
              password: 'hunter2'
-         }
+         },
+         headers: { 'X-Broker-Api-Version': '2.12' }
       )
 
       api.bind_instance(
@@ -229,7 +240,8 @@ RSpec.describe Hula::ServiceBroker::Api do
         auth: {
           username: 'admin',
           password: 'hunter2'
-        }
+        },
+        headers: { 'X-Broker-Api-Version': '2.12' }
       )
 
       api.unbind_instance(

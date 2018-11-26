@@ -24,16 +24,17 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
   let(:body) { JSON.generate(data) }
 
   before do
-    stub_request(method, url).to_return(body: body, status: status)
+    stub_request(method, url).to_return(body: body, status: status).
+      with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'www.example.com', 'User-Agent'=>'Ruby', 'hkey' => 'hvalue'})
   end
 
   describe '#get' do
     let(:data) { { key: 'value' } }
     let(:body) { JSON.generate(data) }
     let(:method) { :get }
+    let(:headers) { { hkey: 'hvalue' } }
 
-    context 'with auth' do
-
+    context 'with headers' do
       let(:username) { 'something' }
       let(:password) { 'secret' }
       let(:url) { "https://#{username}:#{password}@www.example.com:443/foos" }
@@ -44,7 +45,29 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
           auth: {
             username: username,
             password: password
-          }
+          },
+          headers: { hkey: 'hvalue' }
+        )
+      end
+
+      it 'returns the correct data' do
+        expect(request).to eq(data)
+      end
+    end
+
+    context 'with auth' do
+      let(:username) { 'something' }
+      let(:password) { 'secret' }
+      let(:url) { "https://#{username}:#{password}@www.example.com:443/foos" }
+
+      subject(:request) do
+        instance.get(
+          URI('https://www.example.com:443/foos'),
+          auth: {
+            username: username,
+            password: password
+          },
+          headers: { hkey: 'hvalue' }
         )
       end
 
@@ -55,7 +78,7 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
 
     context 'without auth' do
       subject(:request) do
-        instance.get(URI('https://www.example.com:443/foos'))
+        instance.get(URI('https://www.example.com:443/foos'), headers: { hkey: 'hvalue' })
       end
 
       it 'returns correct data' do
@@ -64,6 +87,10 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
     end
 
     context 'when data is not JSON' do
+      before do
+        stub_request(method, url).to_return(body: body, status: status)
+      end
+
       let(:body) { 'something else' }
 
       subject(:request) do
@@ -81,7 +108,7 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
       end
 
       subject(:request) do
-        instance.get(URI(url))
+        instance.get(URI(url), headers: { hkey: 'hvalue' })
       end
 
       it 'raises a timeout error' do
@@ -90,6 +117,10 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
     end
 
     context 'with non 2XX repsonse' do
+      before do
+        stub_request(method, url).to_return(body: body, status: status)
+      end
+
       let(:status) { 500 }
       let(:body) { 'Internal Server Error' }
 
@@ -113,7 +144,7 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
 
     context 'without auth' do
       it 'sends the correct request' do
-        instance.put(URI(url), body: { a_param: 'a_value' })
+        instance.put(URI(url), body: { a_param: 'a_value' }, headers: {'hkey' => 'hvalue'})
 
         assert_requested :put, 'https://www.example.com:443/foos' do |request|
           JSON.parse(request.body) == { 'a_param' => 'a_value' }
@@ -121,7 +152,7 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
       end
 
       it 'returns the correct data' do
-        result = instance.put(URI(url), body: { a_param: 'a_value' })
+        result = instance.put(URI(url), body: { a_param: 'a_value' }, headers: {'hkey' => 'hvalue'})
         expect(result).to eq(data)
       end
     end
@@ -135,7 +166,8 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
         instance.put(
             URI('https://www.example.com:443/foos'),
             body: { a_param: 'a_value' },
-            auth: { username: 'something', password: 'secret' }
+            auth: { username: 'something', password: 'secret' },
+            headers: {'hkey' => 'hvalue'}
         )
 
         assert_requested :put, 'https://something:secret@www.example.com:443/foos' do |request|
@@ -147,7 +179,8 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
         result = instance.put(
             URI('https://www.example.com:443/foos'),
             body: { a_param: 'a_value' },
-            auth: { username: 'something', password: 'secret' }
+            auth: { username: 'something', password: 'secret' },
+            headers: {'hkey' => 'hvalue'}
         )
 
         expect(result).to eq(data)
@@ -155,6 +188,10 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
     end
 
     context 'with non 2XX repsonse' do
+      before do
+        stub_request(method, url).to_return(body: body, status: status)
+      end
+
       let(:status) { 500 }
       let(:body) { 'Internal Server Error' }
 
@@ -176,7 +213,7 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
 
     context 'without auth' do
       it 'returns the correct data' do
-        result = instance.delete(URI(url))
+        result = instance.delete(URI(url), headers: {'hkey' => 'hvalue'})
         expect(result).to eq(data)
       end
     end
@@ -192,7 +229,8 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
           auth: {
             username: username,
             password: password
-          }
+          },
+          headers: {'hkey' => 'hvalue'}
         )
 
         expect(result).to eq(data)
@@ -200,6 +238,10 @@ RSpec.describe Hula::ServiceBroker::HttpJsonClient do
     end
 
     context 'with non 2XX repsonse' do
+      before do
+        stub_request(method, url).to_return(body: body, status: status)
+      end
+
       let(:status) { 500 }
       let(:body) { 'Internal Server Error' }
 

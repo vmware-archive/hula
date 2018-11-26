@@ -29,22 +29,39 @@ module Hula
         @http_proxy = http_proxy
       end
 
-      def get(uri, auth: nil)
+      def get(uri, auth: nil, headers: nil)
         request = Net::HTTP::Get.new(uri)
         request.basic_auth auth.fetch(:username), auth.fetch(:password) unless auth.nil?
+
+        if not headers.nil?
+          headers.each do |key, value|
+            request.add_field(key, value)
+          end
+        end
+
         send_request(request)
       end
 
-      def put(uri, body: nil, auth: nil)
+      def put(uri, body: nil, auth: nil, headers: nil)
         request = Net::HTTP::Put.new(uri)
         request.body = JSON.generate(body) if body
         request.basic_auth auth.fetch(:username), auth.fetch(:password) unless auth.nil?
+        if not headers.nil?
+          headers.each do |key, value|
+            request.add_field(key, value)
+          end
+        end
         send_request(request)
       end
 
-      def delete(uri, auth: nil)
+      def delete(uri, auth: nil, headers: nil)
         request = Net::HTTP::Delete.new(uri)
         request.basic_auth auth.fetch(:username), auth.fetch(:password) unless auth.nil?
+        if not headers.nil?
+          headers.each do |key, value|
+            request.add_field(key, value)
+          end
+        end
         send_request(request)
       end
 
