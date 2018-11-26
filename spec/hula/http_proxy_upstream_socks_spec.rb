@@ -85,7 +85,7 @@ RSpec.describe Hula::HttpProxyUpstreamSocks do
     let(:http_server_uri) { URI::HTTP.build(:host => '0.0.0.0', :port => http_port.to_i) }
     let(:http_proxy_uri) { URI::HTTP.build(:host => '0.0.0.0', :port => proxy.http_port.to_i) }
 
-    it 'allows connections via a http proxy, upstreamed through a SOCKS proxy, to a http server' do
+    xit 'allows connections via a http proxy, upstreamed through a SOCKS proxy, to a http server' do
       expect(
         http_server_uri.read(:proxy => http_proxy_uri)
       ).to eq('test_response_body')
