@@ -45,7 +45,7 @@ module Hula
         begin
           block.call(service_instance)
         ensure
-          api.deprovision_instance(service_instance)
+          api.deprovision_instance(service_instance, plan)
         end
       end
 

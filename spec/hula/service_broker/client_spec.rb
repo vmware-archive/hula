@@ -69,7 +69,7 @@ RSpec.describe Hula::ServiceBroker::Client do
         expect(api).to receive(:provision_instance).with(plan).ordered
         expect(api).to receive(:bind_instance).with(service_instance).ordered
         expect(api).to receive(:unbind_instance).with(binding).ordered
-        expect(api).to receive(:deprovision_instance).with(service_instance).ordered
+        expect(api).to receive(:deprovision_instance).with(service_instance, plan).ordered
 
         expect { |b| instance.provision_and_bind('service_1', 'plan_1', &b) }.to yield_with_args(binding, service_instance)
       end
@@ -156,7 +156,7 @@ RSpec.describe Hula::ServiceBroker::Client do
     context 'with block' do
       it 'provision the service yielding the service_instance and cleaning up' do
         expect(api).to receive(:provision_instance).with(plan).ordered
-        expect(api).to receive(:deprovision_instance).with(service_instance).ordered
+        expect(api).to receive(:deprovision_instance).with(service_instance, plan).ordered
 
         expect { |b| instance.provision_instance('service_1', 'plan_1', &b) }.to yield_with_args(service_instance)
       end

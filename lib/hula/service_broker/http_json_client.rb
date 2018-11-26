@@ -54,7 +54,7 @@ module Hula
         send_request(request)
       end
 
-      def delete(uri, auth: nil, headers: nil)
+      def delete(uri, auth: nil, headers: nil, params: nil)
         request = Net::HTTP::Delete.new(uri)
         request.basic_auth auth.fetch(:username), auth.fetch(:password) unless auth.nil?
         if not headers.nil?

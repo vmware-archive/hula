@@ -48,8 +48,8 @@ module Hula
         ServiceInstance.new(id: service_instance_id)
       end
 
-      def deprovision_instance(service_instance)
-        http_deprovision_service(service_instance_id: service_instance.id)
+      def deprovision_instance(service_instance, plan)
+        http_deprovision_service(service_instance_id: service_instance.id, plan_id: plan.id, service_id: plan.service_id)
       end
 
       def bind_instance(service_instance, binding_id: SecureRandom.uuid)
@@ -90,9 +90,13 @@ module Hula
         )
       end
 
-      def http_deprovision_service(service_instance_id:)
+      def http_deprovision_service(service_instance_id:, plan_id:, service_id:)
+        uri = url.dup
+        uri.path = uri.path += "/v2/service_instances/#{service_instance_id}"
+        params = { :'plan_id' => plan_id, :'service_id' => service_id}
+        uri.query = URI.encode_www_form(params)
         http_client.delete(
-          url_for("/v2/service_instances/#{service_instance_id}"),
+          uri,
           auth: {
             username: username,
             password: password

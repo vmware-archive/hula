@@ -173,7 +173,7 @@ RSpec.describe Hula::ServiceBroker::Api do
   describe '#deprovision_instance' do
     it 'asks the service broker to provision an instance' do
       expect(http_client).to receive(:delete).with(
-                               URI('https://foobar.com/baz/v2/service_instances/service_instance_id'),
+                               URI('https://foobar.com/baz/v2/service_instances/service_instance_id?plan_id=plan-id&service_id=service-id'),
                                auth: {
                                  username: 'admin',
                                  password: 'hunter2'
@@ -181,9 +181,20 @@ RSpec.describe Hula::ServiceBroker::Api do
                                headers: { 'X-Broker-Api-Version': '2.12' }
                              )
 
+      service = Hula::ServiceBroker::Service.new(
+                     id: 'service-id',
+                     name: 'some service',
+                     description: '',
+                     bindable: true,
+                     plans: [{
+                               id: 'plan-id',
+                               name: 'cunning plan',
+                               description: 'dastardly as all hell'
+                             }]
+      )
       service_instance = Hula::ServiceBroker::ServiceInstance.new(id: 'service_instance_id')
 
-      api.deprovision_instance(service_instance)
+      api.deprovision_instance(service_instance, service.plans.first)
     end
   end
 
