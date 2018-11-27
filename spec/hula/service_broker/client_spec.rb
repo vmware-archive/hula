@@ -200,6 +200,7 @@ RSpec.describe Hula::ServiceBroker::Client do
     let(:binding) { instance_double(Hula::ServiceBroker::InstanceBinding) }
 
     before do
+      allow(api).to receive(:catalog).and_return(catalog)
       allow(api).to receive(:bind_instance).and_return(binding)
       allow(api).to receive(:unbind_instance)
     end
@@ -209,7 +210,7 @@ RSpec.describe Hula::ServiceBroker::Client do
         expect(api).to receive(:bind_instance).with(service_instance, plan)
         expect(api).to_not receive(:unbind_instance)
 
-        expect(instance.bind_instance(service_instance, plan)).to be(binding)
+        expect(instance.bind_instance(service_instance, 'service_1', 'plan_1')).to be(binding)
       end
     end
 
@@ -218,7 +219,7 @@ RSpec.describe Hula::ServiceBroker::Client do
         expect(api).to receive(:bind_instance).with(service_instance, plan).ordered
         expect(api).to receive(:unbind_instance).with(binding, plan).ordered
 
-        expect { |b| instance.bind_instance(service_instance, plan, &b) }.to yield_with_args(binding, service_instance)
+        expect { |b| instance.bind_instance(service_instance, 'service_1', 'plan_1', &b) }.to yield_with_args(binding, service_instance)
       end
 
       context 'fails to bind service' do
@@ -228,7 +229,7 @@ RSpec.describe Hula::ServiceBroker::Client do
           expect(api).to_not receive(:unbind_instance)
 
           expect {
-            instance.bind_instance(service_instance, plan) {}
+            instance.bind_instance(service_instance, 'service_1', 'plan_1') {}
           }.to raise_error(Hula::ServiceBroker::Error, /my exception/)
         end
       end
@@ -239,7 +240,7 @@ RSpec.describe Hula::ServiceBroker::Client do
           expect(api).to receive(:bind_instance)
 
           expect {
-            instance.bind_instance(service_instance, plan) {}
+            instance.bind_instance(service_instance, 'service_1', 'plan_1') {}
           }.to raise_error(Hula::ServiceBroker::Error, /my exception/)
         end
       end
@@ -249,7 +250,7 @@ RSpec.describe Hula::ServiceBroker::Client do
           expect(api).to receive(:unbind_instance)
 
           expect {
-            instance.bind_instance(service_instance, plan) { fail StandardError, 'my exception' }
+            instance.bind_instance(service_instance, 'service_1', 'plan_1') { fail StandardError, 'my exception' }
           }.to raise_error(StandardError, /my exception/)
         end
       end

@@ -35,7 +35,7 @@ module Hula
         plan = catalog.service_plan(service_name, plan_name)
 
         provision_instance(service_name, plan_name) do |service_instance|
-          bind_instance(service_instance, plan, &block)
+          bind_instance(service_instance, service_name, plan_name, &block)
         end
       end
 
@@ -51,7 +51,9 @@ module Hula
         end
       end
 
-      def bind_instance(service_instance, plan, &block)
+      def bind_instance(service_instance, service_name, plan_name, &block)
+        plan = catalog.service_plan(service_name, plan_name)
+
         binding = api.bind_instance(service_instance, plan)
         return binding unless block
 
