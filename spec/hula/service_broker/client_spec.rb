@@ -38,17 +38,17 @@ RSpec.describe Hula::ServiceBroker::Client do
     }
   }
 
+  let(:plan) {
+    Hula::ServiceBroker::Plan.new(plan_config.merge(service_id: 'SERVICE_ID_1'))
+  }
+
   let(:args) { { api: api } }
 
   subject(:instance) { described_class.new(args) }
 
   describe '#provision_and_bind' do
-
     let(:service_instance) { instance_double(Hula::ServiceBroker::ServiceInstance) }
     let(:binding) { instance_double(Hula::ServiceBroker::InstanceBinding) }
-    let(:plan) {
-      Hula::ServiceBroker::Plan.new(plan_config.merge(service_id: 'SERVICE_ID_1'))
-    }
 
     before do
       allow(api).to receive(:catalog).and_return(catalog)
@@ -67,7 +67,7 @@ RSpec.describe Hula::ServiceBroker::Client do
     context 'with block' do
       it 'provision and binds the service yielding the binding and cleaning up' do
         expect(api).to receive(:provision_instance).with(plan).ordered
-        expect(api).to receive(:bind_instance).with(service_instance).ordered
+        expect(api).to receive(:bind_instance).with(service_instance, plan).ordered
         expect(api).to receive(:unbind_instance).with(binding).ordered
         expect(api).to receive(:deprovision_instance).with(service_instance, plan).ordered
 
@@ -134,9 +134,6 @@ RSpec.describe Hula::ServiceBroker::Client do
   describe '#provision_instance' do
     let(:service_instance) { instance_double(Hula::ServiceBroker::ServiceInstance) }
     let(:binding) { instance_double(Hula::ServiceBroker::InstanceBinding) }
-    let(:plan) {
-      Hula::ServiceBroker::Plan.new(plan_config.merge(service_id: 'SERVICE_ID_1'))
-    }
 
     before do
       allow(api).to receive(:catalog).and_return(catalog)
@@ -209,19 +206,19 @@ RSpec.describe Hula::ServiceBroker::Client do
 
     context 'without block' do
       it 'binds the service instance returning the credentials' do
-        expect(api).to receive(:bind_instance).with(service_instance)
+        expect(api).to receive(:bind_instance).with(service_instance, plan)
         expect(api).to_not receive(:unbind_instance)
 
-        expect(instance.bind_instance(service_instance)).to be(binding)
+        expect(instance.bind_instance(service_instance, plan)).to be(binding)
       end
     end
 
     context 'with block' do
       it 'binds the service instance yielding the credentials and cleaning up' do
-        expect(api).to receive(:bind_instance).with(service_instance).ordered
+        expect(api).to receive(:bind_instance).with(service_instance, plan).ordered
         expect(api).to receive(:unbind_instance).with(binding).ordered
 
-        expect { |b| instance.bind_instance(service_instance, &b) }.to yield_with_args(binding, service_instance)
+        expect { |b| instance.bind_instance(service_instance, plan, &b) }.to yield_with_args(binding, service_instance)
       end
 
       context 'fails to bind service' do
@@ -231,7 +228,7 @@ RSpec.describe Hula::ServiceBroker::Client do
           expect(api).to_not receive(:unbind_instance)
 
           expect {
-            instance.bind_instance(service_instance) {}
+            instance.bind_instance(service_instance, plan) {}
           }.to raise_error(Hula::ServiceBroker::Error, /my exception/)
         end
       end
@@ -242,7 +239,7 @@ RSpec.describe Hula::ServiceBroker::Client do
           expect(api).to receive(:bind_instance)
 
           expect {
-            instance.bind_instance(service_instance) {}
+            instance.bind_instance(service_instance, plan) {}
           }.to raise_error(Hula::ServiceBroker::Error, /my exception/)
         end
       end
@@ -252,7 +249,7 @@ RSpec.describe Hula::ServiceBroker::Client do
           expect(api).to receive(:unbind_instance)
 
           expect {
-            instance.bind_instance(service_instance) { fail StandardError, 'my exception' }
+            instance.bind_instance(service_instance, plan) { fail StandardError, 'my exception' }
           }.to raise_error(StandardError, /my exception/)
         end
       end

@@ -14,6 +14,18 @@ require 'hula/service_broker/api'
 RSpec.describe Hula::ServiceBroker::Api do
 
   let(:http_client) { instance_double(Hula::ServiceBroker::HttpJsonClient) }
+  
+  let(:plan_config) {
+    {
+      id: 'PLAN_1',
+      name: 'plan_1',
+      description: 'Plan 1'
+    }
+  }
+  
+  let(:plan) {
+    Hula::ServiceBroker::Plan.new(plan_config.merge(service_id: 'SERVICE_ID_1'))
+  }
 
   subject(:api) do
     described_class.new(
@@ -202,7 +214,10 @@ RSpec.describe Hula::ServiceBroker::Api do
     before do
       allow(http_client).to receive(:put).with(
           URI('https://foobar.com/baz/v2/service_instances/service_instance_id/service_bindings/binding_id'),
-          body: {},
+          body: {
+            service_id: 'SERVICE_ID_1',
+            plan_id: 'PLAN_1'
+          },
           auth: {
               username: 'admin',
               password: 'hunter2'
@@ -214,7 +229,10 @@ RSpec.describe Hula::ServiceBroker::Api do
     it 'asks the service broker to bind an instance' do
       expect(http_client).to receive(:put).with(
          URI('https://foobar.com/baz/v2/service_instances/service_instance_id/service_bindings/binding_id'),
-         body: {},
+         body: {
+           service_id: 'SERVICE_ID_1',
+           plan_id: 'PLAN_1'
+         },
          auth: {
              username: 'admin',
              password: 'hunter2'
@@ -224,6 +242,7 @@ RSpec.describe Hula::ServiceBroker::Api do
 
       api.bind_instance(
           Hula::ServiceBroker::ServiceInstance.new(id: 'service_instance_id'),
+          plan,
           binding_id: 'binding_id'
       )
     end
@@ -233,7 +252,8 @@ RSpec.describe Hula::ServiceBroker::Api do
 
       instance_binding = api.bind_instance(
         service_instance,
-        binding_id: 'binding_id'
+        plan,
+        binding_id: 'binding_id',
       )
 
       expect(instance_binding).to eq(Hula::ServiceBroker::InstanceBinding.new(

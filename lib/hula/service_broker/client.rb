@@ -32,8 +32,10 @@ module Hula
 
       def provision_and_bind(service_name, plan_name, &block)
         raise Error, 'no block given' unless block_given?
+        plan = catalog.service_plan(service_name, plan_name)
+
         provision_instance(service_name, plan_name) do |service_instance|
-          bind_instance(service_instance, &block)
+          bind_instance(service_instance, plan, &block)
         end
       end
 
@@ -49,8 +51,8 @@ module Hula
         end
       end
 
-      def bind_instance(service_instance, &block)
-        binding = api.bind_instance(service_instance)
+      def bind_instance(service_instance, plan, &block)
+        binding = api.bind_instance(service_instance, plan)
         return binding unless block
 
         begin

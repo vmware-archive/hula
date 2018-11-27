@@ -52,10 +52,12 @@ module Hula
         http_deprovision_service(service_instance_id: service_instance.id, plan_id: plan.id, service_id: plan.service_id)
       end
 
-      def bind_instance(service_instance, binding_id: SecureRandom.uuid)
+      def bind_instance(service_instance, plan, binding_id: SecureRandom.uuid)
         result = http_bind_instance(
           service_instance_id: service_instance.id,
-          binding_id: binding_id
+          binding_id: binding_id,
+          service_id: plan.service_id,
+          plan_id: plan.id
         )
 
         InstanceBinding.new(
@@ -105,10 +107,13 @@ module Hula
         )
       end
 
-      def http_bind_instance(service_instance_id:, binding_id:)
+      def http_bind_instance(service_instance_id:, binding_id:, service_id:, plan_id:)
         http_client.put(
           url_for("/v2/service_instances/#{service_instance_id}/service_bindings/#{binding_id}"),
-          body: {},
+          body: {
+            service_id: service_id,
+            plan_id: plan_id,
+          },
           auth: { username: username, password: password },
           headers: { 'X-Broker-Api-Version': @broker_api_version }
         )
