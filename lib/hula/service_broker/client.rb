@@ -58,7 +58,7 @@ module Hula
         begin
           block.call(binding, service_instance)
         ensure
-          api.unbind_instance(binding)
+          api.unbind_instance(binding, plan)
           sleep 1
         end
       end

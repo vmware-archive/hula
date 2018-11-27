@@ -67,10 +67,12 @@ module Hula
         )
       end
 
-      def unbind_instance(instance_binding)
+      def unbind_instance(instance_binding, plan)
         http_unbind_instance(
           service_instance_id: instance_binding.service_instance.id,
-          binding_id: instance_binding.id
+          binding_id: instance_binding.id,
+          service_id: plan.service_id,
+          plan_id: plan.id
         )
       end
 
@@ -119,9 +121,14 @@ module Hula
         )
       end
 
-      def http_unbind_instance(service_instance_id:, binding_id:)
+      def http_unbind_instance(service_instance_id:, binding_id:, service_id:, plan_id:)
+        uri = url.dup
+        uri.path = uri.path += "/v2/service_instances/#{service_instance_id}/service_bindings/#{binding_id}"
+        params = { :'plan_id' => plan_id, :'service_id' => service_id}
+        uri.query = URI.encode_www_form(params)
+
         http_client.delete(
-          url_for("/v2/service_instances/#{service_instance_id}/service_bindings/#{binding_id}"),
+          uri,
           auth: { username: username, password: password },
           headers: { 'X-Broker-Api-Version': @broker_api_version }
         )

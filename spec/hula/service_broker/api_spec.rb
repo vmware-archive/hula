@@ -267,7 +267,7 @@ RSpec.describe Hula::ServiceBroker::Api do
   describe '#unbind_instance' do
     it 'asks the service broker to unbind an instance' do
       expect(http_client).to receive(:delete).with(
-        URI('https://foobar.com/baz/v2/service_instances/service_instance_id/service_bindings/binding_id'),
+        URI("https://foobar.com/baz/v2/service_instances/service_instance_id/service_bindings/binding_id?plan_id=#{plan.id}&service_id=#{plan.service_id}"),
         auth: {
           username: 'admin',
           password: 'hunter2'
@@ -280,7 +280,8 @@ RSpec.describe Hula::ServiceBroker::Api do
           id: 'binding_id',
           service_instance: Hula::ServiceBroker::ServiceInstance.new(id: 'service_instance_id'),
           credentials: {}
-        )
+        ),
+        plan
       )
     end
   end
